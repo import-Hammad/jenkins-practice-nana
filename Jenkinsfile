@@ -28,7 +28,7 @@ pipeline {
         stage ('test'){
             when {
                 expression {
-                    params.executeTests...
+                    params.executeTests == true
                 }
             }
 
@@ -41,6 +41,12 @@ pipeline {
         }
 
         stage ('deploy'){
+            input{
+                message "select the environment to deploy"
+                parameters{
+                    choice(name: 'ENV', choices: ['dev', 'qa', 'prod'], description:'Select the environment to deploy')
+                }
+            }
 
             steps{
                 script {
