@@ -1,52 +1,33 @@
-def gv
-
 pipeline {
-    agent any
-    parameters {
-        choice(name: 'VERSION', choices: ['1.1.0', '1.2.0', '1.3.0'], description: 'Select the version to build')
-        booleanParam(name: 'executeTests', defaultValue: true, description: 'Run tests after build?')
+    agent any 
+    tools {
+        maven "maven-3.92"
     }
-
     stages {
-        stage('init') {
+        stage ("build jar"){
             steps {
                 script {
-                    gv = load "script.groovy"
+                    echo "building the jar file"
+                    sh "mvn package"
                 }
             }
         }
-
-        stage('build') {
+        stage (" deploying the app"){
             steps {
                 script {
-                    gv.buildapp()
+                    echo "deploying the app"
+                    withCredentials ([usernamePassword(credentialsID: 'docker-hub-repo', usernameVariable: 'USER', passwordVariable: 'PASS")]){
+                        sh 'docker build -t piratehammad/nana_practice_jenkins_2:jma-2.0 .'
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'}}'
+                        sh 'docker push piratehammad/nana_practice_jenkins_2:jma-2.0')])
                 }
             }
         }
-
-        stage('test') {
-            when {
-                expression {
-                    params.executeTests == true  // ✅ FIXED
-                }
-            }
+         stage ("deploying the app"){
             steps {
                 script {
-                    gv.testapp()
-                }
-            }
-        }
-
-        stage('deploy') {
-            input {
-                message "Select the environment to deploy"
-                parameters {
-                    choice(name: 'ENV', choices: ['dev', 'qa', 'prod'], description: 'Select the environment to deploy')
-                }
-            }
-            steps {
-                script {
-                    gv.deployapp()
+                    echo "deploying the application"
+                    
                 }
             }
         }
