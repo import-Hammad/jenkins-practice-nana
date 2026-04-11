@@ -1,45 +1,32 @@
 #!/usr/bin/env groovy
-@Library('jenkins-shared-lib') 
+@Library('jenkins-shared-lib')_
 
-def gv
 pipeline {
-    agent any 
+    agent any
     tools {
         maven "maven-3.92"
     }
     stages {
-        stage ('init'){
+        stage('build jar') {
             steps {
-                sciprt{
-                    gv = load "script.groovy"
+                script {
+                    buildjar()
                 }
             }
         }
 
-        stage ("build jar"){
+        stage('build and push image') {
             steps {
                 script {
-                    buildjar()
-                    
-                   
+                    buildimage()
                 }
             }
         }
-        stage (" deploying the app"){
+
+        stage('deploy the app') {
             steps {
                 script {
-                    buildimage('piratehammad/nana_practice_jenkins_2:jma-2.0')
-                    
-                    
-                }
-            }
-        }
-         stage ("deploying the app"){
-            steps {
-                script {
-                    gv.deployapp()
-                   
-                    
+                    deployapp()
                 }
             }
         }
