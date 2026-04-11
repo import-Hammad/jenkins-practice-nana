@@ -1,7 +1,7 @@
-FROM openjdk:18-jdk-alpine
+# ✅ CORRECT
+FROM eclipse-temurin:17-jdk-alpine
 
 EXPOSE 8080
-
 
 COPY ./target/java-maven-app*.jar /usr/app/
 WORKDIR /usr/app
