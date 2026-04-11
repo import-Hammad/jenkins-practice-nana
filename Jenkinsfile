@@ -1,42 +1,32 @@
-def gv
 pipeline {
-    agent any 
-    tools {
-        maven "maven-3.92"
-    }
+    agent any
     stages {
-        stage ('init'){
-            steps {
-                sciprt{
-                    gv = load "script.groovy"
-                }
-            }
-        }
-
-        stage ("build jar"){
+        stage ('build'){
             steps {
                 script {
-                    echo "building the jar file"
-                    sh "mvn package"
+                    echo "testing the app"
+                    echo "executing pipeline for branch $BRANCH_NAME"
+
                 }
             }
         }
-        stage (" deploying the app"){
+        stage ('build'){
+            when {
+                expression {
+                    BRANCH_NAME == 'master'
+                }
+            }
+            steps {
+                script {
+                    echo "building the app"
+
+                }
+            }
+        }
+        stage ("deploy"){
             steps {
                 script {
                     echo "deploying the app"
-                    withCredentials ([usernamePassword(credentialsID: 'docker-hub-repo', usernameVariable: 'USER', passwordVariable: 'PASS")]){
-                        sh 'docker build -t piratehammad/nana_practice_jenkins_2:jma-2.0 .'
-                        sh 'echo $PASS | docker login -u $USER --password-stdin'}}'
-                        sh 'docker push piratehammad/nana_practice_jenkins_2:jma-2.0')])
-                }
-            }
-        }
-         stage ("deploying the app"){
-            steps {
-                script {
-                    echo "deploying the application"
-                    
                 }
             }
         }
