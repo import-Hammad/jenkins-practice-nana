@@ -28,7 +28,7 @@ pipeline {
         stage (" deploying the app"){
             steps {
                 script {
-                    buildimage()
+                    buildimage('piratehammad/nana_practice_jenkins_2:jma-2.0')
                     
                     
                 }
