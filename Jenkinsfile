@@ -1,40 +1,39 @@
 def gv
+
 pipeline {
-    agent any 
+    agent any
     tools {
         maven "maven-3.92"
     }
     stages {
-        stage ('init'){
+        stage('init') {
             steps {
-                sciprt{
+                script {
                     gv = load "script.groovy"
                 }
             }
         }
 
-        stage ("build jar"){
+        stage('build jar') {
             steps {
                 script {
-                    dv.buildjar()
-                   
+                    gv.buildjar()
                 }
             }
         }
-        stage (" deploying the app"){
+
+        stage('build and push image') {
             steps {
                 script {
                     gv.buildapp()
-                    
                 }
             }
         }
-         stage ("deploying the app"){
+
+        stage('deploy the app') {
             steps {
                 script {
                     gv.deployapp()
-                   
-                    
                 }
             }
         }
