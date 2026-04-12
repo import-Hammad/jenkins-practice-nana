@@ -18,7 +18,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildimage(piratehammad/nana_practice_jenkins_2:jma-3.0)
+                    buildimage("piratehammad/nana_practice_jenkins_2:jma-3.0")
                 }
             }
         }
