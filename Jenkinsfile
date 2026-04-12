@@ -1,5 +1,4 @@
-#!/usr/bin/env groovy
-@Library('jenkins-shared-library')_
+def gv
 
 pipeline {
     agent any
@@ -7,10 +6,18 @@ pipeline {
         maven "maven-3.92"
     }
     stages {
+        stage('init') {
+            steps {
+                script {
+                    gv = load "script.groovy"
+                }
+            }
+        }
+
         stage('build jar') {
             steps {
                 script {
-                    buildjar()
+                    gv.buildjar()
                 }
             }
         }
@@ -18,7 +25,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildimage()
+                    gv.buildapp()
                 }
             }
         }
@@ -26,7 +33,7 @@ pipeline {
         stage('deploy the app') {
             steps {
                 script {
-                    deployapp()
+                    gv.deployapp()
                 }
             }
         }
