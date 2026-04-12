@@ -7,12 +7,20 @@ library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM
     ]
 )
 
+def gv
 pipeline {
     agent any
     tools {
         maven "maven-3.92"
     }
     stages {
+        stage ('init'){
+            steps {
+                script {
+                    gv = load 'script.groovy'
+                }
+            }
+        }
         stage('build jar') {
             steps {
                 script {
@@ -35,7 +43,7 @@ pipeline {
         stage('deploy the app') {
             steps {
                 script {
-                    deployapp()
+                    gv.deployapp()
                 }
             }
         }
