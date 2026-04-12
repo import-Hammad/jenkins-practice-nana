@@ -27,7 +27,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildDockerImage("piratehammad/nana_practice_jenkins_2:jma-3.0")
+                    buildimage("piratehammad/nana_practice_jenkins_2:jma-3.0")
                     dockerLogin()
                     dockerPush("piratehammad/nana_practice_jenkins_2:jma-3.0")
                 }
