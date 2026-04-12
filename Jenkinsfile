@@ -8,23 +8,25 @@ library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM
 )
 
 def gv
+
 pipeline {
     agent any
     tools {
         maven "maven-3.92"
     }
     stages {
-        stage ('init'){
+        stage('init') {
             steps {
                 script {
                     gv = load 'script.groovy'
                 }
             }
         }
+
         stage('build jar') {
             steps {
                 script {
-                    buildjar()
+                    buildjar()        // ← from shared library
                 }
             }
         }
@@ -32,7 +34,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    def docker = new com.example.Docker(this)
+                    def docker = new com.example.Docker(this)   // ← from shared library src
                     docker.buildDockerImage("piratehammad/nana_practice_jenkins_2:jma-3.0")
                     docker.dockerLogin()
                     docker.dockerPush("piratehammad/nana_practice_jenkins_2:jma-3.0")
@@ -43,7 +45,7 @@ pipeline {
         stage('deploy the app') {
             steps {
                 script {
-                    gv.deployapp()
+                    gv.deployapp()    // ← from script.groovy in your project
                 }
             }
         }
