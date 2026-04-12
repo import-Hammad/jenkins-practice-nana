@@ -1,7 +1,11 @@
 #!/usr/bin/env groovy
-@Library('jenkins-shared-library')_
-
-def gv
+library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM(
+    [
+        $class: 'GitSCMSource',
+        remote: 'https://github.com/import-Hammad/jenkins-shared-libraries-nana.git',
+        credentialsId: 'github-credentials'
+    ]
+)
 
 pipeline {
     agent any
@@ -9,13 +13,6 @@ pipeline {
         maven "maven-3.92"
     }
     stages {
-        stage ('init') {
-            steps {
-                script {
-                    gv = load 'script.groovy'
-                }
-            }
-        }
         stage('build jar') {
             steps {
                 script {
@@ -27,9 +24,10 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildimage("piratehammad/nana_practice_jenkins_2:jma-3.0")
-                    dockerLogin()
-                    dockerPush("piratehammad/nana_practice_jenkins_2:jma-3.0")
+                    def docker = new com.example.Docker(this)
+                    docker.buildDockerImage("piratehammad/nana_practice_jenkins_2:jma-3.0")
+                    docker.dockerLogin()
+                    docker.dockerPush("piratehammad/nana_practice_jenkins_2:jma-3.0")
                 }
             }
         }
@@ -37,7 +35,7 @@ pipeline {
         stage('deploy the app') {
             steps {
                 script {
-                    gv.deployapp()
+                    deployapp()
                 }
             }
         }
