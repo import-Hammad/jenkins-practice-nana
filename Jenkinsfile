@@ -1,4 +1,5 @@
-def gv
+#!/usr/bin/env groovy
+@Library('jenkins-shared-library')_
 
 pipeline {
     agent any
@@ -6,18 +7,10 @@ pipeline {
         maven "maven-3.92"
     }
     stages {
-        stage('init') {
-            steps {
-                script {
-                    gv = load "script.groovy"
-                }
-            }
-        }
-
         stage('build jar') {
             steps {
                 script {
-                    gv.buildjar()
+                    buildjar()
                 }
             }
         }
@@ -25,7 +18,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    gv.buildapp()
+                    buildimage(piratehammad/nana_practice_jenkins_2:jma-3.0)
                 }
             }
         }
