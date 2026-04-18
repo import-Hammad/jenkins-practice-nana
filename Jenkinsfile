@@ -1,13 +1,3 @@
-#!/usr/bin/env groovy
-library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM(
-    [
-        $class: 'GitSCMSource',
-        remote: 'https://github.com/import-Hammad/jenkins-shared-libraries-nana.git',
-        credentialsId: 'github-credentials'
-    ]
-)
-
-def gv
 
 pipeline {
     agent any
@@ -15,37 +5,45 @@ pipeline {
         maven "maven-3.92"
     }
     stages {
-        stage('init') {
+        stage  ('increment  version') {
+            steps  {
+                script  {
+                    echo  "incrementing the version number"
+                    sh  "mvn  build-helper:parse-version  versions:set  \
+                    -DnewVersion=\\\$(parsedVersion.majorVersion).\\\$(parsedVersion.minorVersion).\\\$(parsedVersion.nextIncrementalVersion) \
+                    version:commit"
+                    def  matcher  =  readFile('pom.xml')  =~ '<version>(.+)</version>'
+                    def  version  =  matcher[0][1]
+                    env.IMAGE_NAME  = "$version-$BUILD_NUMBER"
+                }
+            }
+        }
+        stage("build jar") {
             steps {
                 script {
-                    gv = load 'script.groovy'
+                    echo "building the jar file"
+                    sh "mvn clean package"
                 }
             }
         }
 
-        stage('build jar') {
+        stage("build and push image") {
             steps {
                 script {
-                    buildjar()        // ← from shared library
+                    echo "deploying the app"
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh 'docker build -t piratehammad/nana_practice_jenkins_2:$IMAGE_NAME .'
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                        sh 'docker push piratehammad/nana_practice_jenkins_2:$IMAGE_NAME'
+                    }
                 }
             }
         }
 
-        stage('build and push image') {
+        stage("deploy the app") {
             steps {
                 script {
-                    
-                    docker.buildDockerImage("piratehammad/nana_practice_jenkins_2:jma-3.0")
-                    docker.dockerLogin()
-                    docker.dockerPush("piratehammad/nana_practice_jenkins_2:jma-3.0")
-                }
-            }
-        }
-
-        stage('deploy the app') {
-            steps {
-                script {
-                    gv.deployapp()    // ← from script.groovy in your project
+                    echo "deploying the application"
                 }
             }
         }
