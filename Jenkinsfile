@@ -34,7 +34,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    def docker = new com.example.Docker(this)   // ← from shared library src
+                    
                     docker.buildDockerImage("piratehammad/nana_practice_jenkins_2:jma-3.0")
                     docker.dockerLogin()
                     docker.dockerPush("piratehammad/nana_practice_jenkins_2:jma-3.0")
