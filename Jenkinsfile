@@ -39,8 +39,9 @@ pipeline {
             steps {
                 script {
                     echo 'deploying the app'
-                    def dockerCMD = "docker run -d -p 3080:3080 ${env.IMAGE_NAME}"
+                    def dockerCMD = "docker-compose -f docker-compose.yml up -d"
                     sshagent(['ec2-server-key']) {
+                        sh "scp docker-compose.yml ubuntu@3.88.12.245:/home/ubuntu/"
                         sh "ssh -o StrictHostKeyChecking=no ubuntu@3.88.12.245 ${dockerCMD}"  // Bug 5 fixed
                     }
                 }
