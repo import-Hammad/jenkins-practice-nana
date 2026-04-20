@@ -20,7 +20,7 @@ pipeline {
         stage('build app') {
             steps {
                 script {
-                    buildJar()                             // Bug 3 fixed
+                    buildjar()                             // Bug 3 fixed
                 }
             }
         }
@@ -28,7 +28,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildImage(env.IMAGE_NAME)             // Bug 4 fixed
+                    buildimage(env.IMAGE_NAME)             // Bug 4 fixed
                     dockerLogin()
                     dockerPush(env.IMAGE_NAME)
                 }
