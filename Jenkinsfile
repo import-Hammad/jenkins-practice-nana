@@ -3,7 +3,7 @@ library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM
     [
         $class: 'GitSCMSource',
         remote: 'https://github.com/import-Hammad/jenkins-shared-libraries-nana.git',
-        credentialsId: 'github-token'
+        credentialsId: 'github-credentials'
     ]
 )
 
