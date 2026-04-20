@@ -1,48 +1,51 @@
+#!/usr/bin/env groovy
+library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM(
+    [
+        $class: 'GitSCMSource',
+        remote: 'https://github.com/import-Hammad/jenkins-shared-libraries-nana.git',
+        credentialsId: 'github-credentials'
+    ]
+)
+
 pipeline {
     agent any
     tools {
         maven "maven-3.92"
     }
-    stages {
-        stage('increment version') {
+    environment {
+        IMAGE_NAME = "piratehammad/react-nodejs-app:1.0"  // Bug 1 fixed
+    }
+    stages {                                               // Bug 2 fixed
+
+        stage('build app') {
             steps {
                 script {
-                    echo "incrementing the version number"
-                    sh "mvn build-helper:parse-version versions:set \
-                    -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
-                    versions:commit"
-                    def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
-                    def version = matcher[0][1]
-                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                    buildJar()                             // Bug 3 fixed
                 }
             }
         }
-        stage("build jar") {
+
+        stage('build and push image') {
             steps {
                 script {
-                    echo "building the jar file"
-                    sh "mvn clean package"
+                    buildImage(env.IMAGE_NAME)             // Bug 4 fixed
+                    dockerLogin()
+                    dockerPush(env.IMAGE_NAME)
                 }
             }
         }
-        stage("build and push image") {
+
+        stage('deploy the app') {
             steps {
                 script {
-                    echo "building and pushing the app"
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh 'docker build -t piratehammad/nana_practice_jenkins_2:$IMAGE_NAME .'
-                        sh 'echo $PASS | docker login -u $USER --password-stdin'
-                        sh 'docker push piratehammad/nana_practice_jenkins_2:$IMAGE_NAME'
+                    echo 'deploying the app'
+                    def dockerCMD = "docker run -d -p 3080:3080 ${env.IMAGE_NAME}"
+                    sshagent(['ec2-server-key']) {
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@3.88.12.245 ${dockerCMD}"  // Bug 5 fixed
                     }
                 }
             }
         }
-        stage("deploy the app") {
-            steps {
-                script {
-                    echo "deploying the application"
-                }
-            }
-        }
+
     }
 }
