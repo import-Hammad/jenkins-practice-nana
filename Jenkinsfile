@@ -41,7 +41,7 @@ pipeline {
                     echo 'deploying the app'
                     def dockerCMD = "docker-compose -f docker-compose.yml up -d"
                     sshagent(['ec2-server-key']) {
-                        sh "scp docker-compose.yml ubuntu@54.91.135.131:/home/ubuntu/"
+                        sh "scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@54.91.135.131:/home/ubuntu/"
                         sh "ssh -o StrictHostKeyChecking=no ubuntu@54.91.135.131 ${dockerCMD}"  // Bug 5 fixed
                     }
                 }
