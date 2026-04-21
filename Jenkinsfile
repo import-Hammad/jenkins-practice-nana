@@ -15,7 +15,7 @@ pipeline {
     environment {
         IMAGE_NAME = "piratehammad/react-nodejs-app:1.0"
     }
-
+    stages {
         stage('build app') {
             steps {
                 script {
@@ -50,3 +50,4 @@ pipeline {
             }
         }
     }
+}    
