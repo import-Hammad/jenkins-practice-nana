@@ -1,19 +1,32 @@
+#!/usr/bin/env groovy
+@Library('jenkins-shared-lib')_
+
 pipeline {
     agent any
+    tools {
+        maven "maven-3.9"
+    }
     stages {
-        stage('build') {
+        stage('build jar') {
             steps {
-                echo "building the application"
+                script {
+                    buildJar()
+                }
             }
         }
-        stage('test') {
+
+        stage('build and push image') {
             steps {
-                echo "testing the application"
+                script {
+                    buildImage()
+                }
             }
         }
-        stage('deploy') {
+
+        stage('deploy the app') {
             steps {
-                echo "deploying the application"
+                script {
+                }
             }
         }
     }
