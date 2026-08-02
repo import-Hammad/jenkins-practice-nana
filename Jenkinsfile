@@ -1,6 +1,8 @@
 #!/usr/bin/env groovy
 @Library('jenkins-shared-lib')_
 
+def gv
+
 pipeline {
     agent any
     tools {
@@ -18,7 +20,7 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildImage()
+                    buildImage 'piratehammad/demo-app:jma-2.0'
                 }
             }
         }
