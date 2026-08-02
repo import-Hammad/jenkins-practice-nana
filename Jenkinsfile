@@ -1,19 +1,36 @@
 pipeline {
     agent any
+    tools {
+        maven "maven-3.92"
+    }
     stages {
-        stage('build') {
+        stage("build jar") {
             steps {
-                echo "building the application"
+                script {
+                    echo "building the jar file"
+                    sh "mvn package"
+                }
             }
         }
-        stage('test') {
+
+        stage("build and push image") {
             steps {
-                echo "testing the application"
+                script {
+                    echo "building the docker image"
+                    withCredentials([usernamePassword(credentialsId: 'Dockerhub_credentials', usernameVariable: 'USER', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker build -t piratehammad/demo-app:jma-2.0 .'
+                        sh 'echo $PASSWORD | docker login -u $USER --password-stdin'
+                        sh 'docker push piratehammad/demo-app:jma-2.0'
+                    }
+                }
             }
         }
-        stage('deploy') {
+
+        stage("deploy the app") {
             steps {
-                echo "deploying the application"
+                script {
+                    echo "deploying the application"
+                }
             }
         }
     }
