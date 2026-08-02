@@ -7,16 +7,15 @@ pipeline {
     }
 
     stages {
-        stage ('init'){
-            steps{
+        stage('init') {
+            steps {
                 script {
                     gv = load "script.groovy"
                 }
             }
         }
 
-    stages {
-        stage("build jar") {
+        stage('build jar') {
             steps {
                 script {
                     gv.buildJar()
@@ -24,7 +23,7 @@ pipeline {
             }
         }
 
-        stage("build image") {
+        stage('build image') {
             steps {
                 script {
                     gv.buildApp()
@@ -32,7 +31,7 @@ pipeline {
             }
         }
 
-        stage("deploy the app") {
+        stage('deploy the app') {
             steps {
                 script {
                     echo "deploying the application"
@@ -40,5 +39,4 @@ pipeline {
             }
         }
     }
-}
 }
