@@ -20,7 +20,9 @@ pipeline {
         stage('build and push image') {
             steps {
                 script {
-                    buildImage 'piratehammad/demo-app:jma-2.0'
+                    buildImage 'piratehammad/demo-app:jma-3.0'
+                    dockerLogin()
+                    dockerPush 'piratehammad/demo-app:jma-3.0'
                 }
             }
         }
@@ -28,7 +30,7 @@ pipeline {
         stage('deploy the app') {
             steps {
                 script {
-                    deployApp()
+                    gv.deployApp()
                 }
             }
         }
