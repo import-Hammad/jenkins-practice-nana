@@ -26,6 +26,7 @@ pipeline {
         stage('deploy the app') {
             steps {
                 script {
+                    deployApp()
                 }
             }
         }
