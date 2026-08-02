@@ -1,3 +1,4 @@
+### The commented-out code is also usable. With a few minor changes, it can be used as well. Other than that, all the code is ready to copy and use.
 def gv
 
 pipeline {
