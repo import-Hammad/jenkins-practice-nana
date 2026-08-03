@@ -1,2 +1,28 @@
-.idea/*
-target
+# Maven build output
+target/
+
+# IDE files
+.idea/
+*.iml
+out/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+override.tf
+override.tf.json
+
+# Secrets / credentials
+*.pem
+*.key
+.env
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
