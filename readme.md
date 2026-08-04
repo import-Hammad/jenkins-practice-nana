@@ -1,26 +1,48 @@
-## java-maven-app
+# Jenkins Pipeline – Global Shared Library
 
-As part of the course we deploy a maven application to a digital ocean droplet.
-See below the steps to deploy the application I toke.
+This project shows how to use a proper **Jenkins Shared Library** — reusable pipeline code stored in its own separate Git repo, instead of a `script.groovy` file living inside the same project.
 
-- Cloned the base repo from git@gitlab.com:nanuchi/java-maven-app.git
-- I then created a new repository on github and pushed the code to it.
-- With maven I build the jar file with the command ```mvn install```
-- I then created a new droplet on digital ocean and installed java on it.
-    - After setup of the droplet I enabled port 22 and 8080 in the firewall.(22 for ssh acess and 8080 for the app)
-    - I now ssh into the droplet and used the following commands to update the droplet and install java
-        - ``` sudo apt update```
-        - ``` sudo apt upgrade -y```
-        - ```sudo apt install openjdk-8-jre-headless htop nodejs docker net-tools -y```
-    - After updating and confirming java was correctly installed I added a new user
-        - ```adduser jabbo``` To add the user
-        - ```usermod -aG sudo jabbo``` to add the user to the sudo group
-- Then I became the new user and added my ssh keys from my laptop to also login by that user.
-- Then i used scp to upload the jar file
-    - scp target/java-maven-app-1.1.0-SNAPSHOT.jar jabbo@{SERVER}:/root
-- Then I logged into the droplet as jabbo and ran the jar file
-    - ```java -jar java-maven-app-1.1.0-SNAPSHOT.jar```
-- To verify the app was running I used curl to check the app
-    - ```netstat -lpnt```
-- After that I went to the server ip with the 8080 port and saw the app running. With the text Welcome to Java Maven
-  Application
+## What This Branch (`jenkins_shared_library`) Does
+
+The pipeline runs these steps:
+
+1. Loads the global shared library `jenkins-shared-lib`
+2. Builds the app into a `.jar` file using Maven
+3. Builds a Docker image, logs in to Docker Hub, and pushes the image
+4. Deploys the app using a local `script.groovy` function
+
+## Two Ways of Sharing Code, Used Together
+
+This branch mixes both patterns on purpose, to show the difference:
+
+- **Global Shared Library** – functions like `buildJar()`, `buildImage()`, `dockerLogin()`, and `dockerPush()` come from a separate repo: [jenkins-shared-libraries-nana](https://github.com/import-Hammad/jenkins-shared-libraries-nana). It's registered in Jenkins under **Manage Jenkins → System → Global Pipeline Libraries** with the name `jenkins-shared-lib`, and loaded at the top of the Jenkinsfile with `@Library('jenkins-shared-lib')_`. Once loaded, its functions can be called directly — no `gv.` prefix needed.
+- **Local Script Load** – `deployApp()` still comes from a `script.groovy` file sitting in this same repo, loaded the older way with `gv = load "script.groovy"` and called as `gv.deployApp()`.
+
+## How the Files Work Together
+
+- **`Jenkinsfile`** – defines the pipeline, loads the global library, and calls both library functions and local `script.groovy` functions
+- **`script.groovy`** (this repo) – holds `deployApp()`
+- **`jenkins-shared-libraries-nana`** (separate repo) – holds the reusable `buildJar`, `buildImage`, `dockerLogin`, and `dockerPush` functions under its `vars/` folder
+
+## Pipeline Stages
+
+| Stage | What it does |
+|---|---|
+| init | Loads `script.groovy` |
+| build jar | Runs `mvn package` via the shared library's `buildJar()` |
+| build and push image | Builds the Docker image, logs in, and pushes it via shared library functions |
+| deploy the app | Deploys the app using the local `deployApp()` |
+
+## Requirements to Run This Pipeline
+
+- Jenkins with Maven and Docker installed
+- Maven configured in Jenkins under the name `maven-3.9`
+- A Docker Hub credential configured in Jenkins
+- The `jenkins-shared-lib` library registered in **Manage Jenkins → System → Global Pipeline Libraries**, pointing to the [jenkins-shared-libraries-nana](https://github.com/import-Hammad/jenkins-shared-libraries-nana) repo
+
+## Tech Used
+
+- Jenkins
+- Groovy
+- Maven
+- Docker & Docker Hub
