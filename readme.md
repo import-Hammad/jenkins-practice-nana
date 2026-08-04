@@ -1,26 +1,43 @@
-## java-maven-app
+# Jenkins Pipeline – Parameters & Shared Library
 
-As part of the course we deploy a maven application to a digital ocean droplet.
-See below the steps to deploy the application I toke.
+This project shows how to add build parameters, conditional stages, and manual environment selection to a Jenkins pipeline using a shared Groovy script.
 
-- Cloned the base repo from git@gitlab.com:nanuchi/java-maven-app.git
-- I then created a new repository on github and pushed the code to it.
-- With maven I build the jar file with the command ```mvn install```
-- I then created a new droplet on digital ocean and installed java on it.
-    - After setup of the droplet I enabled port 22 and 8080 in the firewall.(22 for ssh acess and 8080 for the app)
-    - I now ssh into the droplet and used the following commands to update the droplet and install java
-        - ``` sudo apt update```
-        - ``` sudo apt upgrade -y```
-        - ```sudo apt install openjdk-8-jre-headless htop nodejs docker net-tools -y```
-    - After updating and confirming java was correctly installed I added a new user
-        - ```adduser jabbo``` To add the user
-        - ```usermod -aG sudo jabbo``` to add the user to the sudo group
-- Then I became the new user and added my ssh keys from my laptop to also login by that user.
-- Then i used scp to upload the jar file
-    - scp target/java-maven-app-1.1.0-SNAPSHOT.jar jabbo@{SERVER}:/root
-- Then I logged into the droplet as jabbo and ran the jar file
-    - ```java -jar java-maven-app-1.1.0-SNAPSHOT.jar```
-- To verify the app was running I used curl to check the app
-    - ```netstat -lpnt```
-- After that I went to the server ip with the 8080 port and saw the app running. With the text Welcome to Java Maven
-  Application
+## What This Branch (`jenkins_parameters_and_shared_library`) Does
+
+The pipeline runs these steps:
+
+1. Loads shared build logic from `script.groovy`
+2. Builds the app
+3. Runs tests — but only if the `executeTests` parameter is checked
+4. Pauses and asks the user to pick a deploy environment, then deploys
+
+## Key Concepts Covered
+
+- **Build Parameters** – `VERSION` (choice) and `executeTests` (checkbox) are set before every build, letting you control the run without changing the Jenkinsfile
+- **Conditional Stages** – the `test` stage only runs `when` `executeTests` is `true`, using Jenkins' `when { expression { ... } }` block
+- **Manual Input During a Run** – the `deploy` stage pauses with an `input` step, asking the user to choose the target environment(s) before continuing
+- **Shared Script** – all the real logic (`buildApp`, `testApp`, `deployApp`) lives in `script.groovy` and is loaded into the pipeline with `load "script.groovy"`
+
+## How the Files Work Together
+
+- **`Jenkinsfile`** – defines parameters, stages, and pipeline flow
+- **`script.groovy`** – contains the actual functions the pipeline calls
+
+## Pipeline Stages
+
+| Stage | What it does |
+|---|---|
+| init | Loads `script.groovy` |
+| build | Builds the application |
+| test | Runs tests, only if `executeTests` is checked |
+| deploy | Asks which environment to deploy to, then deploys |
+
+## Requirements to Run This Pipeline
+
+- Jenkins with the required tools installed for your build
+- No external credentials needed for this branch (no Docker Hub push here)
+
+## Tech Used
+
+- Jenkins
+- Groovy
