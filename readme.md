@@ -1,26 +1,42 @@
-## java-maven-app
+# Jenkins CI/CD Pipeline – Docker Build & Push
 
-As part of the course we deploy a maven application to a digital ocean droplet.
-See below the steps to deploy the application I toke.
+This project sets up a Jenkins pipeline that automatically builds a Java app, packages it into a Docker image, and pushes it to Docker Hub.
 
-- Cloned the base repo from git@gitlab.com:nanuchi/java-maven-app.git
-- I then created a new repository on github and pushed the code to it.
-- With maven I build the jar file with the command ```mvn install```
-- I then created a new droplet on digital ocean and installed java on it.
-    - After setup of the droplet I enabled port 22 and 8080 in the firewall.(22 for ssh acess and 8080 for the app)
-    - I now ssh into the droplet and used the following commands to update the droplet and install java
-        - ``` sudo apt update```
-        - ``` sudo apt upgrade -y```
-        - ```sudo apt install openjdk-8-jre-headless htop nodejs docker net-tools -y```
-    - After updating and confirming java was correctly installed I added a new user
-        - ```adduser jabbo``` To add the user
-        - ```usermod -aG sudo jabbo``` to add the user to the sudo group
-- Then I became the new user and added my ssh keys from my laptop to also login by that user.
-- Then i used scp to upload the jar file
-    - scp target/java-maven-app-1.1.0-SNAPSHOT.jar jabbo@{SERVER}:/root
-- Then I logged into the droplet as jabbo and ran the jar file
-    - ```java -jar java-maven-app-1.1.0-SNAPSHOT.jar```
-- To verify the app was running I used curl to check the app
-    - ```netstat -lpnt```
-- After that I went to the server ip with the 8080 port and saw the app running. With the text Welcome to Java Maven
-  Application
+## What This Branch (`Docker_CICD`) Does
+
+The pipeline runs these steps every time it's triggered:
+
+1. Loads shared build logic from `script.groovy`
+2. Builds the Java app into a `.jar` file using Maven
+3. Builds a Docker image of the app
+4. Logs in to Docker Hub and pushes the image
+5. Deploys the app (placeholder step for now)
+
+## How the Files Work Together
+
+- **`Jenkinsfile`** – defines the pipeline stages and calls functions from `script.groovy`
+- **`script.groovy`** – holds the actual logic (build, package, Docker build/push), loaded into the pipeline at runtime with `load "script.groovy"`
+
+This keeps the `Jenkinsfile` short and readable, while the real work lives in one separate, reusable file.
+
+## Pipeline Stages
+
+| Stage | What it does |
+|---|---|
+| init | Loads `script.groovy` so its functions can be used |
+| build jar | Runs `mvn package` to build the application |
+| build image | Builds the Docker image and pushes it to Docker Hub |
+| deploy the app | Deploys the app (in progress) |
+
+## Requirements to Run This Pipeline
+
+- Jenkins with Maven and Docker installed
+- Maven configured in Jenkins under the name `maven-3.9`
+- A Docker Hub credential added in Jenkins (ID: `Dockerhub_credentials`)
+
+## Tech Used
+
+- Jenkins
+- Groovy
+- Maven
+- Docker & Docker Hub
