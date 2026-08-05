@@ -1,26 +1,53 @@
-## java-maven-app
+# Jenkins Pipeline – Shared Library Loaded Directly from GitHub
 
-As part of the course we deploy a maven application to a digital ocean droplet.
-See below the steps to deploy the application I toke.
+This project shows how to use a Jenkins Shared Library **without** setting it up in Jenkins' global config first — instead, the pipeline pulls the library directly from its GitHub repo every time it runs.
 
-- Cloned the base repo from git@gitlab.com:nanuchi/java-maven-app.git
-- I then created a new repository on github and pushed the code to it.
-- With maven I build the jar file with the command ```mvn install```
-- I then created a new droplet on digital ocean and installed java on it.
-    - After setup of the droplet I enabled port 22 and 8080 in the firewall.(22 for ssh acess and 8080 for the app)
-    - I now ssh into the droplet and used the following commands to update the droplet and install java
-        - ``` sudo apt update```
-        - ``` sudo apt upgrade -y```
-        - ```sudo apt install openjdk-8-jre-headless htop nodejs docker net-tools -y```
-    - After updating and confirming java was correctly installed I added a new user
-        - ```adduser jabbo``` To add the user
-        - ```usermod -aG sudo jabbo``` to add the user to the sudo group
-- Then I became the new user and added my ssh keys from my laptop to also login by that user.
-- Then i used scp to upload the jar file
-    - scp target/java-maven-app-1.1.0-SNAPSHOT.jar jabbo@{SERVER}:/root
-- Then I logged into the droplet as jabbo and ran the jar file
-    - ```java -jar java-maven-app-1.1.0-SNAPSHOT.jar```
-- To verify the app was running I used curl to check the app
-    - ```netstat -lpnt```
-- After that I went to the server ip with the 8080 port and saw the app running. With the text Welcome to Java Maven
-  Application
+## What This Branch (`shared_lib_using_library_identifier`) Does
+
+1. Loads the shared library straight from GitHub using the `library identifier` step — no manual setup needed in **Manage Jenkins → Global Pipeline Libraries**
+2. Also loads a local `script.groovy` file the same way as the other branches
+3. Builds the app into a `.jar` file
+4. Builds a Docker image, logs in to Docker Hub, and pushes the image — using functions that come from the **external shared library**, not the local script
+5. Deploys the app — using a function from the **local** `script.groovy`
+
+## The Two Different Function Sources (Important)
+
+This branch mixes two ways of getting reusable code, so it's worth being clear on which is which:
+
+| Function | Comes from | How it's called |
+|---|---|---|
+| `buildJar()` | External shared library repo (`jenkins-shared-libraries-nana`) | Called directly, no prefix |
+| `buildImage(...)` | External shared library repo | Called directly, no prefix |
+| `dockerLogin()` | External shared library repo | Called directly, no prefix |
+| `dockerPush(...)` | External shared library repo | Called directly, no prefix |
+| `deployApp()` | Local `script.groovy` in this repo | Called as `gv.deployApp()` |
+
+The external library's functions live in its own repo under a `vars/` folder, and Jenkins makes each file in there callable by name automatically — that's why they don't need a `gv.` prefix like the local script does.
+
+## How the Library Gets Loaded
+
+```groovy
+library identifier: 'jenkins-shared-libraries-nana@master', retriever: modernSCM(
+    [
+        $class: 'GitSCMSource',
+        remote: 'https://github.com/import-Hammad/jenkins-shared-libraries-nana.git',
+        credentialsId: 'github-credentials'
+    ]
+)
+```
+
+This tells Jenkins exactly which repo, branch, and credentials to use — so the library doesn't need to be pre-registered anywhere in Jenkins settings. Any pipeline can pull it in this way, from any Jenkins instance.
+
+## Requirements to Run This Pipeline
+
+- Jenkins with Maven and Docker installed
+- Maven configured in Jenkins under the name `maven-3.9`
+- A `github-credentials` entry in Jenkins with access to the shared library repo
+- A Docker Hub credential set up (used inside the shared library's `dockerLogin()`/`dockerPush()` functions)
+
+## Tech Used
+
+- Jenkins
+- Groovy (Jenkins Shared Library)
+- Maven
+- Docker & Docker Hub
