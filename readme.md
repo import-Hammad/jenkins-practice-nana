@@ -1,26 +1,59 @@
-## java-maven-app
+# Jenkins Pipeline – Auto-Incrementing Build Version
 
-As part of the course we deploy a maven application to a digital ocean droplet.
-See below the steps to deploy the application I toke.
+This project shows how to automatically bump the app's version number on every build, so each Docker image gets a unique, meaningful tag instead of a hardcoded one.
 
-- Cloned the base repo from git@gitlab.com:nanuchi/java-maven-app.git
-- I then created a new repository on github and pushed the code to it.
-- With maven I build the jar file with the command ```mvn install```
-- I then created a new droplet on digital ocean and installed java on it.
-    - After setup of the droplet I enabled port 22 and 8080 in the firewall.(22 for ssh acess and 8080 for the app)
-    - I now ssh into the droplet and used the following commands to update the droplet and install java
-        - ``` sudo apt update```
-        - ``` sudo apt upgrade -y```
-        - ```sudo apt install openjdk-8-jre-headless htop nodejs docker net-tools -y```
-    - After updating and confirming java was correctly installed I added a new user
-        - ```adduser jabbo``` To add the user
-        - ```usermod -aG sudo jabbo``` to add the user to the sudo group
-- Then I became the new user and added my ssh keys from my laptop to also login by that user.
-- Then i used scp to upload the jar file
-    - scp target/java-maven-app-1.1.0-SNAPSHOT.jar jabbo@{SERVER}:/root
-- Then I logged into the droplet as jabbo and ran the jar file
-    - ```java -jar java-maven-app-1.1.0-SNAPSHOT.jar```
-- To verify the app was running I used curl to check the app
-    - ```netstat -lpnt```
-- After that I went to the server ip with the 8080 port and saw the app running. With the text Welcome to Java Maven
-  Application
+## What This Branch (`build_version_incremented`) Does
+
+1. Automatically increments the version number in `pom.xml` on every run, using Maven's `build-helper` and `versions` plugins
+2. Reads the new version back out of `pom.xml` and combines it with the Jenkins build number to form a unique image tag
+3. Builds the app into a `.jar` file
+4. Builds a Docker image using that unique tag, then pushes it to Docker Hub
+5. Deploys the app (placeholder step)
+
+## How the Version Increment Works
+
+```groovy
+sh "mvn build-helper:parse-version versions:set \
+-DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion} \
+versions:commit"
+```
+
+This tells Maven to read the current version from `pom.xml` (e.g. `1.2.0`), keep the major and minor numbers the same, and bump only the last number up by one (`1.2.0` → `1.2.1`). It then saves this new version straight back into `pom.xml`.
+
+After that, the pipeline reads the updated version out of `pom.xml`:
+
+```groovy
+def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
+def version = matcher[0][1]
+env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+```
+
+`$BUILD_NUMBER` is a variable Jenkins provides automatically, and it goes up by one on every run. Combining it with the version gives an image tag like:
+
+```
+1.2.1-47
+```
+
+so every single build produces a Docker image with its own unique tag — no image ever gets silently overwritten.
+
+## Pipeline Stages
+
+| Stage | What it does |
+|---|---|
+| increment version | Bumps the version in `pom.xml` and builds the image tag |
+| build jar | Builds the application |
+| build and push image | Builds the Docker image with the new tag, then pushes it to Docker Hub |
+| deploy the app | Deploys the app (in progress) |
+
+## Requirements to Run This Pipeline
+
+- Jenkins with Maven and Docker installed
+- Maven configured in Jenkins under the name `maven-3.9`
+- The `build-helper-maven-plugin` and `versions-maven-plugin` available to the project (via `pom.xml`)
+- A Docker Hub credential added in Jenkins (ID: `Dockerhub_credentials`)
+
+## Tech Used
+
+- Jenkins
+- Maven
+- Docker & Docker Hub
