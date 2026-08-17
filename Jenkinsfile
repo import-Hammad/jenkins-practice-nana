@@ -37,12 +37,30 @@ pipeline {
                 }
             }
         }
-        stage("deploy the app") {
+        stage('deploy the app') {
             steps {
                 script {
-                    echo "deploying the application"
+                    echo 'deploying the app'
+                    def dockerCMD = "bash ./server.sh ${IMAGE_NAME}"
+                    def ec2Instance = "ubuntu@54.91.135.131" #use your instance ip
+                    sshagent(['ec2-server-key']) {
+                        sh "scp server.sh  ${ec2Instance}:/home/ubuntu/"
+                        sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${dockerCMD}"  
+                    }
+                }
+            }
+        stage('commit version update') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh 'git remote set-url origin https://${USER}:${PASS}@github.com/import-Hammad/jenkins-practice-nana.git'
+                        sh 'git add .'
+                        sh "git commit -m 'Updated version number to $IMAGE_NAME'"
+                        sh 'git push origin HEAD:jenkins_job'
+                    }
                 }
             }
         }
     }
+}
 }
